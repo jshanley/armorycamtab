@@ -9,6 +9,6 @@ body {
   height: 100%;
 }
 
-.armory-cam {
+#armory-cam {
   object-fit: cover;
 }
