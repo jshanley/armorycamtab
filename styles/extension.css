@@ -1,0 +1,8 @@
+body {
+  margin: 0;
+}
+
+.armory-cam {
+  width: 100%;
+  object-fit: cover;
+}
