@@ -1,13 +1,18 @@
-body {
+html, body {
   margin: 0;
   width: 100%;
   height: 100%;
 }
 
-#armory-cam {
-  display: block;
+#main {
   width: 100%;
   height: 100%;
-  background-size: cover;
-  background-position: center;
+}
+
+img.fallback {
+  filter: grayscale();
+}
+
+img {
+  object-fit: cover;
 }

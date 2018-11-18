@@ -5,11 +5,14 @@
    "description": "Armory Cam Tab shows a live look at Armory Square in Syracuse, NY every time you open a new tab.",
    "manifest_version": 2,
    "name": "Armory Cam Tab",
-   "version": "1.0",
+   "version": "1.1",
+   "permissions": [
+      "storage"
+   ],
    "icons": {
       "128": "images/icon128@2x.jpg",
       "16": "images/icon16@2x.png",
       "48": "images/icon48@2x.png"
    },
-   "content_security_policy": "script-src 'self' https://www.google-analytics.com; img-src *; object-src 'self'"
+   "content_security_policy": "script-src 'self' https://www.google-analytics.com; img-src * data:; object-src 'self'"
 }
