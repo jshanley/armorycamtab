@@ -1,72 +1,70 @@
-(function() {
+document.addEventListener('DOMContentLoaded', () => {
 
-  document.addEventListener('DOMContentLoaded', function () {
+  const rand = Math.random();
+  const imageUrl = `https://tower.armorycam.com/ftpuploaduser/FI9821W_C4D655392937/snap/current.jpg?rand=${rand}`;
 
-    var rand = Math.random();
+  const wrapper = document.getElementById('main');
 
-    var imageUrl = 'https://tower.armorycam.com/ftpuploaduser/FI9821W_C4D655392937/snap/current.jpg?rand=' + rand;
+  // Create images
+  const fallback = new Image();
+  fallback.crossOrigin = 'anonymous';
+  fallback.decoding = 'async';
+  fallback.className = 'fallback';
 
-    var wrapper = document.getElementById('main');
+  const latestImage = new Image();
+  latestImage.crossOrigin = 'anonymous';
+  latestImage.decoding = 'async';
 
-    var fallback = new Image();
-    fallback.crossOrigin = 'anonymous';
-    fallback.className = 'fallback';
-    
-    // var cachedImage = localStorage.getItem('cachedImage');
-    chrome.storage.local.get(['cachedImage'], function(result) {
-      console.log('result:', result)
-      var cachedImage = result.cachedImage;
-      if (cachedImage) {
-        console.log('Showing cached image')
-        fallback.src = cachedImage;
-      }
-    });
-    
-    wrapper.appendChild(fallback);
-
-    var latestImage = new Image();
-    latestImage.crossOrigin = 'anonymous';
-    latestImage.onload = function() {
-      wrapper.removeChild(fallback);
-      wrapper.appendChild(latestImage);
-      maintainSize();
-
-      var canvas = document.createElement('canvas');
-      var width = 1920;
-      var height = 1080;
-      canvas.setAttribute('width', width);
-      canvas.setAttribute('height', height);
-      var ctx = canvas.getContext('2d');
-      ctx.drawImage(latestImage, 0, 0, width, height);
-      var imageData = canvas.toDataURL();
-      
-      // localStorage.setItem('cachedImage', imageData);
-      chrome.storage.local.set({cachedImage: imageData}, function() {
-        console.log('cachedImage saved to storage.')
-      })
-      
+  // Add image elements to DOM
+  wrapper.appendChild(fallback);
+  wrapper.appendChild(latestImage);
+  
+  // Get cached image from storage
+  chrome.storage.local.get(['cachedImage'], result => {
+    const {cachedImage} = result;
+    if (cachedImage) {
+      fallback.src = cachedImage;
     }
-
-    // kick off image load
-    latestImage.src = imageUrl;
-
-    
-
-    window.addEventListener('resize', maintainSize);
-    maintainSize();
-
   });
-
-  function maintainSize() {
-    var wrapper = document.getElementById('main');
-    var w = window.innerWidth,
-        h = window.innerHeight;
-    var image = wrapper.getElementsByTagName('img')[0];
-    image.style.height = h + 'px';
-    image.style.width = w + 'px';
+  
+  // Add "loaded" class to the fallback image once it loads
+  fallback.onload = (evt) => {
+    evt.target.classList.add('loaded');
   }
 
+  // Request latest image
+  const request = new XMLHttpRequest();
+  request.open('GET', imageUrl, true);
+  request.responseType = 'blob';
+  request.onload = () => {
+    if (request.status == 200) {
+      const blob = request.response;
 
+      // Create an object URL to use as the img src
+      const objectUrl = window.URL.createObjectURL(blob);
+      
+      latestImage.onload = (evt) => {
+        // Make sure to add the "loaded" class
+        evt.target.classList.add('loaded');
+        // Clean up the now-obsolete object URL
+        window.URL.revokeObjectURL(objectUrl);
+      }
+      latestImage.src = objectUrl;
 
+      // Use a FileReader to turn the blob into a base64 data url to cache
+      const fileReader = new FileReader();
+      fileReader.onload = (evt) => {
+        const {result} = evt.target;
+        // Cache the data url (async)
+        chrome.storage.local.set({cachedImage: result}, () => {
+          // This is reached once the storage key/value has been set.
+          // A no-op for now...
+        })
+      }
+      fileReader.readAsDataURL(blob);
+    }
+  };
 
-})()
+  request.send();
+
+});
